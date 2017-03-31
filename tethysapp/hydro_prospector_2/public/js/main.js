@@ -130,6 +130,17 @@ require(["dojo/dom",
             gp.getResultData(jobInfo.jobId, "watershed", drawWatershed, failedCallback);
             gp.getResultData(jobInfo.jobId, "reservoir", drawReservoir);
             gp.getResultData(jobInfo.jobId, "volume", getVolume);
+            /* The next line shows the workaround that I found. So in the python geoprocessing script you created, there
+             are various arcpy.AddMessage() calls. Well, it turns out that the web service geoprocessing task writes
+             those messages to the "messages" property of the jobInfo callback variable. I saw that on line 172 of your
+             script (https://github.com/elisenavidad/FDC-Storage/blob/master/tethysapp/storage_capacity/public/arcgis/FDC_Storage2.py#L172)
+             you called arcpy.AddMessage(results). Thus, the results were actually stored inside the jobInfo.messages
+             array. By inspection, I found that it was stored in the 18th index (19th item) in the array. The actual
+             text of the message is stored in the "description" property of the message.
+             If you were wanting to convert the string to an actual list, you would use the eval() function I showed you.
+             Like so:
+             var results_list = eval(jobInfo.messages[18].description)
+             */
             resultsRequestSucceeded(jobInfo.messages[18].description);
             // gp.getResultData(jobInfo.jobId, "results", getResults);
         }
