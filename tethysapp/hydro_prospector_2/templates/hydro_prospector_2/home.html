@@ -1,0 +1,182 @@
+{% extends "hydro_prospector_2/base.html" %}
+{% load staticfiles %}
+{% load tethys_gizmos %}
+
+{% block app_content_wrapper_override %}
+<!-- Modal  -->
+<style>
+  #desc {
+    color: black;
+    font-size:12pt;
+    margin-left:10px;
+  }
+  .sub {
+    font-size:12pt;
+  }
+  .modalNote {
+    color: gray;
+    margin-left:10px;
+  }
+  .modalList {
+    margin:10px;
+    font-size:16pt;
+
+  }
+</style>
+<div class="modal fade" id="welcome-popup" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Storage Capacity Application Help Guide</h4>
+      </div>
+      <div class="modal-body">
+        <div id="welcome-info">
+          <div class="line">
+            <p id="desc">This application calculates the storage capacity of a potential reservoir given a location at
+              any stream within the Dominican Republic and a dam height. Follow the steps below in order to successfully
+              calculate storage capacity.</p>
+          </div>
+          <ol>
+            <li class="modalList">Zoom to location</li>
+            <span class="sub">Zoom into a general region of interest.</span>
+            <li class="modalList">Select point of interest</li>
+            <span class="sub">Click the "Click here to draw point" button to begin selecting a location. Next,
+            click on a stream on the map to select your point of interest.</span>
+            <li class="modalList">Specify dam height</li>
+            <span class="sub">Enter a desired dam height in the text box below "Enter Dam Height (Meters)". The
+          default value is set to 100 meters.</span>
+            <li class="modalList">Calculate storage capacity</li>
+            <span class="sub">Click the "Submit" button to begin calculating storage capacity. </span>
+            <li class="modalList">Review results</li>
+            <span class="sub">After clicking the "Submit" button, the application will produce a total volume  in cubic
+            meters, and draw both a watershed and a reservoir area on the map.</span>
+          </ol>
+          <div class="modalNote">
+            <span>
+              Note: Storage capacity will only be calculated if users click within a river stream. Clicking outside a
+              stream will prompt a message asking users to specify a point of interest at least 100 meters within the
+              closest stream.
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <div id="byu-logo-container">
+          <span><i>Developed at the BYU HydroInformatics Lab</i></span>
+          <img src="{% static 'hydro_prospector_2/images/byu-logo.png' %}"/>
+        </div>
+        <button type="button" class="btn btn-default" id="close-popup" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Modal -->
+
+<!-- Form Modal -->
+<div class="modal fade" id="modalPropertiesForm" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Site Parameters</h4>
+      </div>
+      <div class="modal-body">
+        <!-- MODAL BODY -->
+        <form id="parameters-form">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-md-4">
+              {% gizmo text_input input_dam_height %}
+            </div>
+            <div class="col-md-4">
+              {% gizmo text_input input_curve_number %}
+            </div>
+            <div class="col-md-4">
+              {% gizmo text_input text_input %}
+            </div>
+          </div>
+          <br />
+
+          <div class="row">
+            <div class="col-md-5">
+              <div>
+                {% gizmo select_input materialDropdown %}
+                <br />
+
+                <p style="color: #333; font-size: 14px;"><strong>Enter Parameter Values</strong></p>
+                {% gizmo table_view input_tbv %}
+              </div>
+            </div>
+            <div class="col-md-7">
+              <div class="row">
+                <p style="color: #333; font-size: 14px; padding-left: 1em;"><strong>Enter Minor losses</strong></p>
+                <div class="col-md-4">
+                  {% gizmo table_view bends_tbv %}
+                </div>
+                <div class="col-md-4">
+                  {% gizmo table_view inlets_tbv %}
+                </div>
+                <div class="col-md-4" style="padding-left: 0; padding-right: 0;">
+                  <div clasd="row">
+                    <div class="col-md-12">
+                      {% gizmo table_view exits_tbv %}
+                    </div>
+                  </div>
+                  <div clasd="row">
+                    <div class="col-md-12">
+                      {% gizmo table_view gradContraction_tbv %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-success" data-dismiss="modal" id="btnSubmitProperties" onclick="app.submitResRequest()" disabled>Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Modal -->
+
+<!-- Results Modal -->
+<div class="modal fade" id="modalResults" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Results</h4>
+      </div>
+      <div class="modal-body">
+        <div id="results"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" id="close-popup" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- End Modal -->
+{{block.super}}
+{% endblock %}
+
+{% block app_content %}
+<link rel="stylesheet" href="https://js.arcgis.com/3.16/esri/css/esri.css"/>
+<style>
+  html, body, #mapDiv {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+</style>
+<script src="https://js.arcgis.com/3.16/"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+<script src="https://code.highcharts.com/highcharts.src.js"></script>
+<div id="mapDiv"></div>
+{% endblock %}

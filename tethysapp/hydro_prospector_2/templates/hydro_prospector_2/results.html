@@ -1,0 +1,12 @@
+{% load tethys_gizmos %}
+<h2>Capacity Results</h2>
+<br>
+
+<div class="row">
+    <div class="col-md-3">
+        {% gizmo table_view capacity_tbv %}
+    </div>
+    <div class="col-md-9">
+        {% gizmo plot_view line_plot_view %}
+    </div>
+</div>

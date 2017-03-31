@@ -1,0 +1,113 @@
+#volDiv {
+    padding-top: 20px;
+}
+
+#volBlue {
+    padding-left: 2em;
+    font-weight: bold;
+    color: lightblue;
+}
+
+#volError {
+    padding-left: 2em;
+    font-weight: bold;
+    color: red;
+}
+
+#app-content-wrapper #app-content #app-actions {
+    display: none;
+}
+
+#inner-app-content {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    padding: 0;
+}
+
+#app-content-wrapper {
+    overflow: hidden;
+}
+
+#byu-logo-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    margin: 10px;
+    overflow-y: visible;
+    height: 60px;
+    width: 150px;
+}
+#byu-logo-container img {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 50px;
+}
+#byu-logo-container span {
+    position: absolute;
+    bottom: 0;
+    left: 55px;
+    width: 150px;
+    margin-bottom: 10px;
+    text-align: left;
+    font-size: 12px;
+}
+
+/*****************************************************/
+/*                   GENERAL MODAL                   */
+.modal-dialog {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+}
+.modal-content {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+}
+.modal-header {
+    min-height: 70px;
+}
+.modal-body {
+    position: fixed;
+    top: 70px;
+    bottom: 65px;
+    right: 1px;
+    left: 0;
+    overflow-y: auto;
+}
+.modal-footer {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-flex-flow: row wrap;
+    -ms-flex-flow: row wrap;
+    flex-flow: row wrap;
+    -webkit-box-pack: end;
+    -webkit-justify-content: flex-end;
+    -ms-flex-pack: end;
+    justify-content: flex-end;
+    -webkit-align-content: space-between;
+    -ms-flex-line-pack: justify;
+    align-content: space-between;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    height: 65px;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: 0;
+}
+
+#modalPropertiesForm .modal-dialog, #modalResults .modal-dialog {
+    width: auto;
+    margin: 15px;
+}
