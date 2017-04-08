@@ -1,14 +1,10 @@
-#volDiv {
-    padding-top: 20px;
-}
-
-#volBlue {
+.volBlue {
     padding-left: 2em;
     font-weight: bold;
     color: lightblue;
 }
 
-#volError {
+.volError {
     padding-left: 2em;
     font-weight: bold;
     color: red;
@@ -110,4 +106,17 @@
 #modalPropertiesForm .modal-dialog, #modalResults .modal-dialog {
     width: auto;
     margin: 15px;
+}
+
+#modalWaterUseStats .modal-dialog {
+    width: 700px;
+}
+
+h1, h2, h3, h4, h5, h6, p {
+    padding-left: 15px;
+}
+
+.result {
+    font-weight: bold;
+    font-color: darkblue;
 }

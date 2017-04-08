@@ -1,6 +1,90 @@
 //loads modal on page load
+MONTHLY_STATS = {
+    'Jan': {'daylight': 0.46, 'temperature': 52.0},
+    'Feb': {'daylight': 0.48, 'temperature': 52.7},
+    'Mar': {'daylight': 0.50, 'temperature': 53.7},
+    'Apr': {'daylight': 0.52, 'temperature': 54.7},
+    'May': {'daylight': 0.54, 'temperature': 55.5},
+    'Jun': {'daylight': 0.55, 'temperature': 55.9},
+    'Jul': {'daylight': 0.55, 'temperature': 55.7},
+    'Aug': {'daylight': 0.53, 'temperature': 54.9},
+    'Sep': {'daylight': 0.51, 'temperature': 54.0},
+    'Oct': {'daylight': 0.49, 'temperature': 53.0},
+    'Nov': {'daylight': 0.47, 'temperature': 52.2},
+    'Dec': {'daylight': 0.46, 'temperature': 51.7}
+};
+
+var averagePrecip, watershedArea;
+
 $(document).ready(function () {
     $("#welcome-popup").modal("show");
+    $('#btnShowWaterUseStatsModal').on('click', function () {
+        $('#modalWaterUseStats').modal('show');
+    });
+    $('#btnCalcWaterUseStats').on('click', function () {
+        var totalVol = Number($('.volBlue').first().text()).toFixed(2);
+        var k, t, p, crop;
+        var uTotal = 0;
+
+        $('.result-option').add('#results-waterUse')
+            .addClass('hidden');
+
+        // AGRICULTURAL CALCULATIONS
+        if ($('#kValue1').val() == 999) {
+            k = $('#kValue2').val();
+            crop = $('#cropName').val();
+        } else {
+            k = $('#kValue1').val();
+            crop = $('#kValue1').find(':selected').text().split(' ')[1].slice(1, -1);
+        }
+
+        $('.month').each(function (i, obj) {
+            var $this = $(obj);
+            if ($this.is(':checked')) {
+                t = MONTHLY_STATS[$this.val()]['temperature'];
+                p = MONTHLY_STATS[$this.val()]['daylight'];
+                uTotal += (k * t * p / 100);
+            }
+        });
+
+        // watershedArea is in square kilometers
+        // uTotal is in inches
+        // totalVol is in cubic meters
+        // 0.00972855818531 ac-in in 1 m^3 (http://www.convertunits.com/from/cubic+foot/to/acre+inch)
+
+        var totalVolAcreInch = totalVol * 0.00972855818531;
+        var totalCropAcres = totalVolAcreInch / uTotal;
+
+        $('#result-acres').text(Number(totalCropAcres).toFixed(2));
+        $('#result-crop').text(crop);
+
+        // DOMESTIC CALCULATIONS
+
+        var householdWater = $('#householdWater').val();
+
+        if ($('#domesticOption1').is(':checked')) {
+            // householdWater is in liters
+            // totalVol is in cubic meters
+            // 1 m^3 is 1000 liters
+
+            var householdsServed = parseInt(totalVol * 1000 / householdWater);
+            $('.result-households').text(householdsServed);
+
+            $('#result-option1').removeClass('hidden');
+        } else {
+            var numHouseholds = Number($('#householdCount').val());
+            var daysServed = totalVol * 1000 / (householdWater * numHouseholds);
+
+            $('.result-households').text(numHouseholds);
+            $('#result-days').text(daysServed);
+
+            $('#result-option2').removeClass('hidden');
+        }
+
+        $('#results-waterUse').removeClass('hidden');
+        var body = $('#modalWaterUseStats').find('.modal-body')
+        body.scrollTop(body[0].scrollHeight);
+    });
 });
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -33,7 +117,7 @@ require(["dojo/dom",
         var map = new Map("mapDiv", {
             center: [-69.5, 18.6],
             zoom: 8,
-            basemap: "satellite"
+            basemap: "hybrid"
         });
 
         var toolbar;
@@ -116,16 +200,17 @@ require(["dojo/dom",
         //displays request status
         function statusCallback(jobInfo) {
             if (jobInfo.jobStatus === "esriJobSubmitted") {
-                $("#vol").html("<h6>Request submitted...</h6>");
+                $("#status").html("<h6>Request submitted...</h6>");
             } else if (jobInfo.jobStatus === "esriJobExecuting") {
-                $("#vol").html("<h6>Executing...</h6>");
+                $("#status").html("<h6>Executing...</h6>");
             } else if (jobInfo.jobStatus === "esriJobSucceeded") {
-                $("#vol").html("<h6>Retrieving results...</h6>");
+                $("#status").html("<h6>Retrieving results...</h6>");
             }
         }
 
         //calls draw reservoir and get volume on success, or failedcallback on failed request
         function completeCallback(jobInfo) {
+            $('#status').addClass('hidden');
             map.graphics.clear();
             gp.getResultData(jobInfo.jobId, "watershed", drawWatershed, failedCallback);
             gp.getResultData(jobInfo.jobId, "reservoir", drawReservoir);
@@ -141,14 +226,14 @@ require(["dojo/dom",
              Like so:
              var results_list = eval(jobInfo.messages[18].description)
              */
-            resultsRequestSucceeded(jobInfo.messages[18].description);
+            resultsRequestSucceeded(jobInfo);
             // gp.getResultData(jobInfo.jobId, "results", getResults);
         }
 
         //prints alert for wrong input point on failed request
         function failedCallback() {
             map.setMapCursor("auto");
-            $("#vol").html("<p class='bg-danger'><span id='volError'>No nearby stream found</span></p>");
+            $("#status").html("<p class='bg-danger'><span class='volError'>No nearby stream found</span></p>");
             alert("No major stream found nearby. Please click at least within 100 meters of a major stream.")
         }
 
@@ -189,32 +274,28 @@ require(["dojo/dom",
             req.then(volRequestSucceeded, volRequestFailed);
         }
 
-        function getResults(results) {
-            var req = esriRequest({
-                "url": results.value.url,
-                "handleAs": "text"
-            });
-            req.then(resultsRequestSucceeded, resultsRequestFailed);
-        }
-
         //manipulates text dile and adds total volume to app on successful text file request
         function volRequestSucceeded(response){
             var elem = response.split(",");
             var volNumber = Number(elem[elem.length - 1]).toFixed(2);
-            $("#vol").html(
-                "<h6>Total Volume:</h6>" +
-                "<p class='bg-primary'><span id='volBlue'>" + volNumber + "</span> Cubic Meters</p>"
+            $(".vol").html(
+                "<h5>Total Volume:</h5>" +
+                "<p class='bg-primary'><span class='volBlue'>" + volNumber + "</span> Cubic Meters</p>"
             );
+            $('.result-water').text(volNumber);
         }
 
         //returns error on failed text file request
         function volRequestFailed(error){
-            $("#vol").html("<p class='bg-danger'>Error: " + error + " happened while retrieving the volume</p>");
+            $("#status").html("<p class='bg-danger'>Error: " + error + " happened while retrieving the volume</p>");
         }
 
-        function resultsRequestSucceeded(response){
-            var flowList = response;
+        function resultsRequestSucceeded(results){
+            var flowList = results.messages[18].description;
+            console.log(flowList);
             var percentList = JSON.stringify([99,95,90,85,80,75,70,60,50,40,30,20]);
+            averagePrecip = Number(results.messages[15].description.split('=')[1]);
+            watershedArea = Number(results.messages[14].description.split('=')[1]);
             $.ajax({
                 url: '/apps/hydro-prospector-2/calculate-capacity/',
                 type: 'POST',
@@ -228,11 +309,6 @@ require(["dojo/dom",
                     $('#modalResults').modal('show');
                 }
             })
-        }
-
-        //returns error on failed text file request
-        function resultsRequestFailed(error){
-            $("#vol").html("<p class='bg-danger'>Error: " + error + " happened while retrieving the flow duration curve.</p>");
         }
 
         function initHighChartsPlot($element, plot_type) {
@@ -319,6 +395,14 @@ require(["dojo/dom",
                 return v;
             }
         }
+
+        $('[name=domesticOption').on('change', function () {
+           $('#householdCountDiv').toggleClass('hidden', !$('#domesticOption2').is(':checked'));
+        });
+
+        $('#btnSubmitProperties').on('click', function () {
+            $('#status').removeClass('hidden');
+        });
 
         //adds public functions to variable app
         app = {map: map, drawPoint: drawPoint, submitResRequest: submitResRequest};

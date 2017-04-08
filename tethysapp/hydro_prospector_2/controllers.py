@@ -18,35 +18,67 @@ def home(request):
         'Drawn Turbing': 0.0000015, 'Plastic': 0, 'Glass': 0
     }
 
-    material_select_input = []
+    k_value_options = [
+        ('1.2 (Banana)', 1.2),
+        ('1.05 (Cocoa)', 1.05),
+        ('0.85 (Lemon)', 0.85),
+        ('0.85 (Pineapple)', 0.85),
+        ('1.15 (Beans)', 1.15),
+        ('Other... (Specify)', 999)
+    ]
+
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+    material_select_options = []
     for v, k in pipe_roughness.iteritems():
-        material_select_input.append((v, float(k)))
+        material_select_options.append((v, float(k)))
 
     material_dropdown = SelectInput(display_text='Select Pipe Material',
                                     name='materialDropdown',
                                     multiple=False,
-                                    options=material_select_input,
+                                    options=material_select_options,
                                     initial=['Commercial Steel'],
                                     original=False)
 
-    input_dam_height = TextInput(display_text='Enter Dam Height',
+    input_dam_height = TextInput(display_text='Dam Height',
                                  name='damHeight',
                                  append='Meters',
                                  initial=10)
 
-    input_curve_number = TextInput(display_text='Enter Curve Number',
+    input_curve_number = TextInput(display_text='Curve Number',
                                    name='curveNumber',
                                    initial=80)
 
-    text_input = TextInput(display_text='Enter Water Temperature',
+    input_household_water = TextInput(display_text='Average Daily Water Use Per Household',
+                                      name='householdWater',
+                                      append='Liters',
+                                      initial=225)
+
+    select_k_value = SelectInput(display_text='Crop K-Value',
+                                 name='kValue1',
+                                 multiple=False,
+                                 original=False,
+                                 options=k_value_options,
+                                 attributes={
+                                     'onclick': "$('.user-k-value').toggleClass('hidden', this.value != 999)"
+                                 }
+                                 )
+
+    input_k_value = TextInput(display_text='Crop K Value',
+                              name='kValue2')
+
+    input_crop_name = TextInput(display_text='Crop Name',
+                                name='cropName')
+
+    text_input = TextInput(display_text='Water Temperature',
                            name='inputAmount',
                            placeholder='20.00',
                            append=unicode(u'\u00b0' + 'C'))
 
     input_tbv = TableView(column_names=('Input', 'Value', 'Units'),
-                          rows=[('Length', 739, '[ M ]'),
+                          rows=[('Length', 100, '[ M ]'),
                                 ('Diameter', 1.5, '[ M ]'),
-                                ('Elevation Head', 135, '[ M ]')],
+                                ('Elevation Head', 100, '[ M ]')],
                           hover=True,
                           striped=True,
                           bordered=True,
@@ -110,7 +142,12 @@ def home(request):
         'exits_tbv': exits_tbv,
         'gradContraction_tbv': grad_contraction_tbv,
         'input_dam_height': input_dam_height,
-        'input_curve_number': input_curve_number
+        'input_curve_number': input_curve_number,
+        'select_k_value': select_k_value,
+        'input_crop_name': input_crop_name,
+        'input_k_value': input_k_value,
+        'months': months,
+        'input_household_water': input_household_water
     }
 
     return render(request, 'hydro_prospector_2/home.html', context)
