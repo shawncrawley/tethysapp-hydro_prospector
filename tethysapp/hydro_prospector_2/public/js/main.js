@@ -123,7 +123,7 @@ require(["dojo/dom",
         var toolbar;
 
         //creates streamlines featuer layer and adds it to the map
-        var featureLayer = new FeatureLayer("http://geoserver.byu.edu/arcgis/rest/services/hydropower_mskl/backgroundData/MapServer/1");
+        var featureLayer = new FeatureLayer("https://geoserver.byu.edu/arcgis/rest/services/hydropower_mskl/backgroundData/MapServer/1");
         map.addLayer(featureLayer);
 
         var layerInfos = [{
@@ -134,7 +134,7 @@ require(["dojo/dom",
         map.enableSnapping({alwaysSnap: true}).setLayerInfos(layerInfos);
 
         //creates geoprocessing task by calling geoprocessing service for server
-        gp = new GeoProcessor("http://geoserver.byu.edu/arcgis/rest/services/FDC_Jackson/FDCCalc3/GPServer/FDC%20Calculator");
+        gp = new GeoProcessor("https://geoserver.byu.edu/arcgis/rest/services/FDC_Jackson/FDCCalc3/GPServer/FDC%20Calculator");
         gp.setOutputSpatialReference({wkid: 102100});
 
         //creates drawing tool
