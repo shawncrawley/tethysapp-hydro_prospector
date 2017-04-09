@@ -166,9 +166,6 @@ def calculate_capacity(request):
         flow_list = loads(params['flowList'])
         percentage_list = loads(params['percentList'])
 
-        flow_list.reverse()
-        percentage_list.reverse()
-
         density = 998
         kin_viscosity = 0.00000112
         turbine_efficiency = 0.53
@@ -176,15 +173,13 @@ def calculate_capacity(request):
         r_d_ratio = pipe_material / diameter
         x_s_area = pi * (diameter / 2.0) ** 2
 
-        counter = 1
         for flow in flow_list:
-            print 'Flow %s: %s' % (counter, flow)
             ave_velocity = flow / x_s_area
             reynolds_n = (ave_velocity * diameter) / kin_viscosity
             flow_type = 'Laminar' if reynolds_n < 2000 else 'Turbulent'
-            # mass_f_r = density * flow
-            friction_factor = 64 / reynolds_n if flow_type == 'Laminar' else (1 / (
-                -1.8 * log10((r_d_ratio / 3.7) ** 1.11 + (6.9 / reynolds_n)))) ** 2
+            friction_factor = 64 / reynolds_n \
+                if flow_type == 'Laminar' \
+                else (1 / (-1.8 * log10((r_d_ratio / 3.7)**1.11 + (6.9 / reynolds_n))))**2
 
             smooth90_f = 0.3 * float(params['BCountInput0'])
             smooth90_t = 0.9 * float(params['BCountInput1'])
@@ -215,7 +210,6 @@ def calculate_capacity(request):
             total_head_loss = minor_losses + friction_loss
             turbine_head = elev_head - total_head_loss
 
-            print turbine_head, density, flow, turbine_efficiency, gravity
             capacity = (turbine_head * density * flow * turbine_efficiency * gravity) / 1000
             capacity_list.append((int(percentage_list[flow_list.index(flow)]),
                                   round(float(flow), 2),
@@ -253,8 +247,6 @@ def calculate_capacity(request):
             'capacity_tbv': capacity_tbv,
             'line_plot_view': line_plot_view
         }
-
-        # return JsonResponse(context)
 
     else:
         raise Http404("No request was submitted.")
