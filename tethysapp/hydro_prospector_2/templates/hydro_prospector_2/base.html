@@ -34,11 +34,14 @@
 {% endblock %}
 
 {% block content_dependent_styles %}
+    <link rel="stylesheet" href="https://js.arcgis.com/3.16/esri/css/esri.css"/>
     {{ block.super }}
     <link href="{% static 'hydro_prospector_2/css/main.css' %}" rel="stylesheet"/>
 {% endblock %}
 
 {% block scripts %}
+    <script src="https://js.arcgis.com/3.16/"></script>
+    <script src="https://code.highcharts.com/highcharts.src.js"></script>
     {{ block.super }}
     <script src="{% static 'hydro_prospector_2/js/main.js' %}" type="text/javascript"></script>
 {% endblock %}
