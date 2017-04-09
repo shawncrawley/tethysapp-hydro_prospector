@@ -16,133 +16,6 @@ MONTHLY_STATS = {
 
 var averagePrecip, watershedArea;
 
-$(document).ready(function () {
-    var storedLat = localStorage.getItem("lat");
-    var storedLon = localStorage.getItem("lon");
-    if (storedLat) {
-        $('#latitude').val(storedLat);
-    }
-    if (storedLon) {
-        $('#longitude').val(storedLon);
-    }
-
-    if (storedLat && storedLon) {
-        $('#btnAddPoint').prop('disabled', false);
-    }
-
-    $('#welcome-popup')
-        .on('shown.bs.modal', function () {
-            $(window).on('keyup.modal', function (e) {
-                if (e.which === 27) {
-                    $('#welcome-popup').modal('hide');
-                    $(window).off('keyup.modal');
-                }
-            });
-        })
-        .on('hidden.bs.modal', function () {
-            $(window).off('keyup.modal');
-        })
-        .modal("show");
-
-    $('#btnShowWaterUseStatsModal').on('click', function () {
-        $('#modalWaterUseStats').modal('show');
-    });
-
-    $('#btnCalcWaterUseStats').on('click', function () {
-        var totalVol = Number($('.volBlue').first().text()).toFixed(2);
-        var k, t, p, crop;
-        var uTotal = 0;
-
-        $('.result-option').add('#results-waterUse')
-            .addClass('hidden');
-
-        // AGRICULTURAL CALCULATIONS
-        if ($('#kValue1').val() == 999) {
-            k = $('#kValue2').val();
-            crop = $('#cropName').val();
-        } else {
-            k = $('#kValue1').val();
-            crop = $('#kValue1').find(':selected').text().split(' ')[1].slice(1, -1);
-        }
-
-        $('.month').each(function (i, obj) {
-            var $this = $(obj);
-            if ($this.is(':checked')) {
-                t = MONTHLY_STATS[$this.val()]['temperature'];
-                p = MONTHLY_STATS[$this.val()]['daylight'];
-                uTotal += (k * t * p / 100);
-            }
-        });
-
-        // watershedArea is in square kilometers
-        // uTotal is in inches
-        // totalVol is in cubic meters
-        // 0.00972855818531 ac-in in 1 m^3 (http://www.convertunits.com/from/cubic+foot/to/acre+inch)
-
-        var totalVolAcreInch = totalVol * 0.00972855818531;
-        var totalCropAcres = totalVolAcreInch / uTotal;
-
-        $('#result-acres').text(Number(totalCropAcres).toFixed(2));
-        $('#result-crop').text(crop);
-
-        // DOMESTIC CALCULATIONS
-
-        var householdWater = $('#householdWater').val();
-
-        if ($('#domesticOption1').is(':checked')) {
-            // householdWater is in liters
-            // totalVol is in cubic meters
-            // 1 m^3 is 1000 liters
-
-            var householdsServed = parseInt(totalVol * 1000 / householdWater);
-            $('.result-households').text(householdsServed);
-
-            $('#result-option1').removeClass('hidden');
-        } else {
-            var numHouseholds = Number($('#householdCount').val());
-            var daysServed = totalVol * 1000 / (householdWater * numHouseholds);
-
-            $('.result-households').text(numHouseholds);
-            $('#result-days').text(daysServed);
-
-            $('#result-option2').removeClass('hidden');
-        }
-
-        $('#results-waterUse').removeClass('hidden');
-        var body = $('#modalWaterUseStats').find('.modal-body')
-        body.scrollTop(body[0].scrollHeight);
-    });
-
-    $('[name=domesticOption]').on('change', function () {
-        $('#householdCountDiv').toggleClass('hidden', !$('#domesticOption2').is(':checked'));
-    });
-
-    $('#btnSubmitProperties').on('click', function () {
-        $('#status').removeClass('hidden');
-    });
-
-    $('.latlon')
-        .on('input', function () {
-            var hasInputCounter = 0;
-            $('.latlon').each(function (i, obj) {
-                $(obj).val() !== '' ? hasInputCounter += 1 : null;
-            });
-            $('#btnAddPoint').prop('disabled', hasInputCounter !== 2)
-        })
-        .on('focus', function () {
-            $(window).on('keydown.latlon', function (e) {
-                if (e.which === 13) {
-                    $('#btnAddPoint').trigger('click');
-                }
-            })
-        })
-        .on('blur', function () {
-            $(window).off('keydown.latlon');
-        });
-});
-
-//----------------------------------------------------------------------------------------------------------------------
-
 //creates variable for public functions
 var app;
 
@@ -486,6 +359,129 @@ require(["dojo/dom",
                 addPointToMap(null, outputpoint[0]);
             });
         });
+
+        var storedLat = localStorage.getItem("lat");
+        var storedLon = localStorage.getItem("lon");
+        if (storedLat) {
+            $('#latitude').val(storedLat);
+        }
+        if (storedLon) {
+            $('#longitude').val(storedLon);
+        }
+
+        if (storedLat && storedLon) {
+            $('#btnAddPoint').prop('disabled', false);
+        }
+
+        $('#welcome-popup')
+            .on('shown.bs.modal', function () {
+                $(window).on('keyup.modal', function (e) {
+                    if (e.which === 27) {
+                        $('#welcome-popup').modal('hide');
+                        $(window).off('keyup.modal');
+                    }
+                });
+            })
+            .on('hidden.bs.modal', function () {
+                $(window).off('keyup.modal');
+            })
+            .modal("show");
+
+        $('#btnShowWaterUseStatsModal').on('click', function () {
+            $('#modalWaterUseStats').modal('show');
+        });
+
+        $('#btnCalcWaterUseStats').on('click', function () {
+            var totalVol = Number($('.volBlue').first().text()).toFixed(2);
+            var k, t, p, crop;
+            var uTotal = 0;
+
+            $('.result-option').add('#results-waterUse')
+                .addClass('hidden');
+
+            // AGRICULTURAL CALCULATIONS
+            if ($('#kValue1').val() == 999) {
+                k = $('#kValue2').val();
+                crop = $('#cropName').val();
+            } else {
+                k = $('#kValue1').val();
+                crop = $('#kValue1').find(':selected').text().split(' ')[1].slice(1, -1);
+            }
+
+            $('.month').each(function (i, obj) {
+                var $this = $(obj);
+                if ($this.is(':checked')) {
+                    t = MONTHLY_STATS[$this.val()]['temperature'];
+                    p = MONTHLY_STATS[$this.val()]['daylight'];
+                    uTotal += (k * t * p / 100);
+                }
+            });
+
+            // watershedArea is in square kilometers
+            // uTotal is in inches
+            // totalVol is in cubic meters
+            // 0.00972855818531 ac-in in 1 m^3 (http://www.convertunits.com/from/cubic+foot/to/acre+inch)
+
+            var totalVolAcreInch = totalVol * 0.00972855818531;
+            var totalCropAcres = totalVolAcreInch / uTotal;
+
+            $('#result-acres').text(Number(totalCropAcres).toFixed(2));
+            $('#result-crop').text(crop);
+
+            // DOMESTIC CALCULATIONS
+
+            var householdWater = $('#householdWater').val();
+
+            if ($('#domesticOption1').is(':checked')) {
+                // householdWater is in liters
+                // totalVol is in cubic meters
+                // 1 m^3 is 1000 liters
+
+                var householdsServed = parseInt(totalVol * 1000 / householdWater);
+                $('.result-households').text(householdsServed);
+
+                $('#result-option1').removeClass('hidden');
+            } else {
+                var numHouseholds = Number($('#householdCount').val());
+                var daysServed = totalVol * 1000 / (householdWater * numHouseholds);
+
+                $('.result-households').text(numHouseholds);
+                $('#result-days').text(daysServed);
+
+                $('#result-option2').removeClass('hidden');
+            }
+
+            $('#results-waterUse').removeClass('hidden');
+            var body = $('#modalWaterUseStats').find('.modal-body')
+            body.scrollTop(body[0].scrollHeight);
+        });
+
+        $('[name=domesticOption]').on('change', function () {
+            $('#householdCountDiv').toggleClass('hidden', !$('#domesticOption2').is(':checked'));
+        });
+
+        $('#btnSubmitProperties').on('click', function () {
+            $('#status').removeClass('hidden');
+        });
+
+        $('.latlon')
+            .on('input', function () {
+                var hasInputCounter = 0;
+                $('.latlon').each(function (i, obj) {
+                    $(obj).val() !== '' ? hasInputCounter += 1 : null;
+                });
+                $('#btnAddPoint').prop('disabled', hasInputCounter !== 2)
+            })
+            .on('focus', function () {
+                $(window).on('keydown.latlon', function (e) {
+                    if (e.which === 13) {
+                        $('#btnAddPoint').trigger('click');
+                    }
+                })
+            })
+            .on('blur', function () {
+                $(window).off('keydown.latlon');
+            });
 
         //adds public functions to variable app
         app = {map: map, drawPoint: drawPoint, submitResRequest: submitResRequest};
