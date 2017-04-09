@@ -462,6 +462,7 @@ require(["dojo/dom",
 
         $('#btnSubmitProperties').on('click', function () {
             $('#status').removeClass('hidden');
+            $('#btnShowModalResults').addClass('hidden');
         });
 
         $('.latlon')
@@ -486,3 +487,5 @@ require(["dojo/dom",
         //adds public functions to variable app
         app = {map: map, drawPoint: drawPoint, submitResRequest: submitResRequest};
     });
+
+define('jquery', [], function () { return jQuery; });

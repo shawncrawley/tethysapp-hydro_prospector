@@ -215,6 +215,7 @@ def calculate_capacity(request):
             total_head_loss = minor_losses + friction_loss
             turbine_head = elev_head - total_head_loss
 
+            print turbine_head, density, flow, turbine_efficiency, gravity
             capacity = (turbine_head * density * flow * turbine_efficiency * gravity) / 1000
             capacity_list.append((int(percentage_list[flow_list.index(flow)]),
                                   round(float(flow), 2),
