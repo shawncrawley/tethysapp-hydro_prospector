@@ -166,6 +166,9 @@ def calculate_capacity(request):
         flow_list = loads(params['flowList'])
         percentage_list = loads(params['percentList'])
 
+        flow_list.reverse()
+        percentage_list.reverse()
+
         density = 998
         kin_viscosity = 0.00000112
         turbine_efficiency = 0.53
@@ -173,7 +176,9 @@ def calculate_capacity(request):
         r_d_ratio = pipe_material / diameter
         x_s_area = pi * (diameter / 2.0) ** 2
 
+        counter = 1
         for flow in flow_list:
+            print 'Flow %s: %s' % (counter, flow)
             ave_velocity = flow / x_s_area
             reynolds_n = (ave_velocity * diameter) / kin_viscosity
             flow_type = 'Laminar' if reynolds_n < 2000 else 'Turbulent'
@@ -200,9 +205,9 @@ def calculate_capacity(request):
             degree45 = 0.04 * float(params['GCountInput1'])
             degree60 = 0.07 * float(params['GCountInput2'])
 
-            total_k = (smooth90_f + smooth90_t + miter90 + elbow45_t + union_t + reentrant + sharpe_edge +
-                       well_rounded + slightly_rounded + reentrant_t + sharpe_edge_t + rounded_t + degree30 +
-                       degree45 + degree60)
+            total_k = smooth90_f + smooth90_t + miter90 + elbow45_t + union_t + reentrant + sharpe_edge + \
+                well_rounded + slightly_rounded + reentrant_t + sharpe_edge_t + rounded_t + degree30 + \
+                degree45 + degree60
 
             minor_losses = total_k * (ave_velocity ** 2 / (2 * gravity))
             friction_loss = (friction_factor * length * ave_velocity ** 2) / (diameter * 2 * gravity)

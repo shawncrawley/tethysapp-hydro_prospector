@@ -5,22 +5,26 @@
 {% block title %}- {{ tethys_app.name }}{% endblock %}
 
 {% block app_icon %}
-  {# The path you provided in your app.py is accessible through the tethys_app.icon context variable #}
-  <img src="{% static tethys_app.icon %}">
+    {# The path you provided in your app.py is accessible through the tethys_app.icon context variable #}
+    <img src="{% static tethys_app.icon %}">
 {% endblock %}
 
 {# The name you provided in your app.py is accessible through the tethys_app.name context variable #}
 {% block app_title %}{{ tethys_app.name }}{% endblock %}
 
 {% block app_navigation_items %}
-  <button type="button" class="btn btn-default" data-toggle="modal" data-target="#welcome-popup">Instructions</button>
-  <a class="btn btn-default" href="https://github.com/msouff/storageCapacityDR" target="_blank">More Info</a>
-  <br><br>
-  <button type="button" id="initDraw" class="btn btn-primary" onclick="app.drawPoint()">Click here to draw point</button>
-  <br><br>
-  <button type="button" class="btn btn-default" id="btnShowPropertiesModal" data-toggle="modal" data-target="#modalPropertiesForm">View/Edit Properties</button>
-  <button type="button" class="btn btn-default hidden" id="btnShowModalResults" data-toggle="modal" data-target="#modalResults">View Results</button>
-  <div id="status"></div>
+    <button type="button" class="btn btn-default" data-toggle="modal" data-target="#welcome-popup">Instructions</button>
+    <a class="btn btn-default" href="https://github.com/msouff/storageCapacityDR" target="_blank">More Info</a>
+    <br><br>
+    <button type="button" id="initDraw" class="btn btn-primary" onclick="app.drawPoint()">Click here to draw point</button>
+    <div>Or enter coordinate:</div>
+    <input type="number" id="latitude" class="latlon" min="-90" max="90" placeholder="Lat">
+    <input type="number" id="longitude" class="latlon" min="-180" max="180" placeholder="Lon">
+    <button type="button" id="btnAddPoint" class="btn btn-primary btn-sm" disabled>Go</button>
+    <br><br>
+    <button type="button" class="btn btn-default" id="btnShowPropertiesModal" data-toggle="modal" data-target="#modalPropertiesForm">View/Edit Properties</button>
+    <button type="button" class="btn btn-default hidden" id="btnShowModalResults" data-toggle="modal" data-target="#modalResults">View Results</button>
+    <div id="status"></div>
 {% endblock %}
 
 {% block app_content %}
@@ -30,11 +34,11 @@
 {% endblock %}
 
 {% block content_dependent_styles %}
-  {{ block.super }}
-  <link href="{% static 'hydro_prospector_2/css/main.css' %}" rel="stylesheet"/>
+    {{ block.super }}
+    <link href="{% static 'hydro_prospector_2/css/main.css' %}" rel="stylesheet"/>
 {% endblock %}
 
 {% block scripts %}
-  {{ block.super }}
-  <script src="{% static 'hydro_prospector_2/js/main.js' %}" type="text/javascript"></script>
+    {{ block.super }}
+    <script src="{% static 'hydro_prospector_2/js/main.js' %}" type="text/javascript"></script>
 {% endblock %}

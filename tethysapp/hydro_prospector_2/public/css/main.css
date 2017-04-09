@@ -120,3 +120,7 @@ h1, h2, h3, h4, h5, h6, p {
     font-weight: bold;
     font-color: darkblue;
 }
+
+.latlon {
+    width: 100px;
+}

@@ -17,10 +17,37 @@ MONTHLY_STATS = {
 var averagePrecip, watershedArea;
 
 $(document).ready(function () {
-    $("#welcome-popup").modal("show");
+    var storedLat = localStorage.getItem("lat");
+    var storedLon = localStorage.getItem("lon");
+    if (storedLat) {
+        $('#latitude').val(storedLat);
+    }
+    if (storedLon) {
+        $('#longitude').val(storedLon);
+    }
+
+    if (storedLat && storedLon) {
+        $('#btnAddPoint').prop('disabled', false);
+    }
+
+    $('#welcome-popup')
+        .on('shown.bs.modal', function () {
+            $(window).on('keyup.modal', function (e) {
+                if (e.which === 27) {
+                    $('#welcome-popup').modal('hide');
+                    $(window).off('keyup.modal');
+                }
+            });
+        })
+        .on('hidden.bs.modal', function () {
+            $(window).off('keyup.modal');
+        })
+        .modal("show");
+
     $('#btnShowWaterUseStatsModal').on('click', function () {
         $('#modalWaterUseStats').modal('show');
     });
+
     $('#btnCalcWaterUseStats').on('click', function () {
         var totalVol = Number($('.volBlue').first().text()).toFixed(2);
         var k, t, p, crop;
@@ -85,6 +112,33 @@ $(document).ready(function () {
         var body = $('#modalWaterUseStats').find('.modal-body')
         body.scrollTop(body[0].scrollHeight);
     });
+
+    $('[name=domesticOption]').on('change', function () {
+        $('#householdCountDiv').toggleClass('hidden', !$('#domesticOption2').is(':checked'));
+    });
+
+    $('#btnSubmitProperties').on('click', function () {
+        $('#status').removeClass('hidden');
+    });
+
+    $('.latlon')
+        .on('input', function () {
+            var hasInputCounter = 0;
+            $('.latlon').each(function (i, obj) {
+                $(obj).val() !== '' ? hasInputCounter += 1 : null;
+            });
+            $('#btnAddPoint').prop('disabled', hasInputCounter !== 2)
+        })
+        .on('focus', function () {
+            $(window).on('keydown.latlon', function (e) {
+                if (e.which === 13) {
+                    $('#btnAddPoint').trigger('click');
+                }
+            })
+        })
+        .on('blur', function () {
+            $(window).off('keydown.latlon');
+        });
 });
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -108,7 +162,10 @@ require(["dojo/dom",
         "esri/tasks/LinearUnit",
         "esri/symbols/SimpleMarkerSymbol",
         "esri/symbols/SimpleLineSymbol",
-        "esri/symbols/SimpleFillSymbol","esri/request"],
+        "esri/symbols/SimpleFillSymbol",
+        "esri/request",
+        "esri/tasks/ProjectParameters"
+    ],
     function(dom, array, Color, Map, Draw, FeatureLayer, SnappingManager,
              Graphic, GraphicsUtils, GeoProcessor, FeatureSet, LinearUnit,
              SimpleMarkerSymbol, SimpleLineSymbol, SimpleFillSymbol, esriRequest) {
@@ -147,7 +204,7 @@ require(["dojo/dom",
         var pointTest;
         function drawPoint() {
             map.graphics.clear();
-            if (pointTest === false) {
+            if (pointTest === false && toolbar) {
                 toolbar.deactivate();
             }
             pointTest = true;
@@ -176,7 +233,14 @@ require(["dojo/dom",
         }
 
         //creates symbology for point, draws point, adds it to map, and adds it to feature set variable
-        function addPointToMap(evt) {
+        function addPointToMap(evt, point) {
+            var originalEvt = evt;
+            if (evt == null && point) {
+                evt = {
+                    geometry: point
+                };
+                pointTest = true;
+            }
             var pointSymbol = new SimpleMarkerSymbol();
             pointSymbol.setSize(14);
             pointSymbol.setOutline(new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 0, 0]), 1));
@@ -187,6 +251,10 @@ require(["dojo/dom",
             if (pointTest === true) {
                 var graphic = new Graphic(evt.geometry, pointSymbol);
                 map.graphics.add(graphic);
+
+                if (point) {
+                    map.centerAndZoom(point, 16);
+                }
 
                 var features = [];
                 features.push(graphic);
@@ -396,12 +464,27 @@ require(["dojo/dom",
             }
         }
 
-        $('[name=domesticOption').on('change', function () {
-           $('#householdCountDiv').toggleClass('hidden', !$('#domesticOption2').is(':checked'));
-        });
-
-        $('#btnSubmitProperties').on('click', function () {
-            $('#status').removeClass('hidden');
+        $('#btnAddPoint').on('click', function () {
+            app.map.graphics.clear();
+            var lat = Number($('#latitude').val());
+            var lon = Number($('#longitude').val());
+            localStorage.setItem("lat", lat);
+            localStorage.setItem("lon", lon);
+            var latlon = [lat, lon];
+            var inSR = new esri.SpatialReference({
+                wkid: 4326
+            });
+            var outSR = new esri.SpatialReference({
+                wkid: 102100
+            });
+            var geometryService = new esri.tasks.GeometryService("https://utility.arcgisonline.com/ArcGIS/rest/services/Geometry/GeometryServer");
+            var inputpoint = new esri.geometry.Point(lon, lat, inSR);
+            var PrjParams = new esri.tasks.ProjectParameters();
+            PrjParams.geometries = [inputpoint];
+            PrjParams.outSR = outSR;
+            geometryService.project(PrjParams, function (outputpoint) {
+                addPointToMap(null, outputpoint[0]);
+            });
         });
 
         //adds public functions to variable app
